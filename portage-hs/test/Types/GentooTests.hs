@@ -7,7 +7,7 @@ module Types.GentooTests (gentooTests) where
 
 import Control.Applicative
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.List
+import ListT
 import Data.Proxy
 import System.Directory
 import System.FilePath.Posix
