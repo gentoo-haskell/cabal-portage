@@ -1,14 +1,12 @@
 {-# Language ScopedTypeVariables #-}
 {-# Language TypeApplications #-}
 
-{-# Options_GHC -Wno-deprecations #-} -- Don't nag me about ListT
-
 module Types.GentooTests (gentooTests) where
 
 import Control.Applicative
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.List
 import Data.Proxy
+import ListT (ListT, fromFoldable, toList)
 import System.Directory
 import System.FilePath.Posix
 import Test.Tasty
@@ -33,7 +31,7 @@ gentooParseTests n pkgStrings = testGroup n $
 -- | Scan the entire @/var/db/repos@ tree for ebuilds and form these into
 --  pacakge atoms.
 repoTree :: IO [String]
-repoTree = runListT $ do
+repoTree = toListT $ do
     let reposDir = "/var/db/repos"
     checkDir reposDir $ do
 
@@ -52,7 +50,7 @@ repoTree = runListT $ do
 --   @<category>/<pkg-name>-<version>@. This is inherently part of the directory
 --   structure inside @/var/db/pkg@.
 pkgTree :: IO [String]
-pkgTree = runListT $ do
+pkgTree = toListT $ do
     let portagePkgDir = "/var/db/pkg"
     checkDir portagePkgDir $ do
 
@@ -68,7 +66,7 @@ pkgTree = runListT $ do
 listDir :: FilePath -> ListT IO FilePath
 listDir d = do
     lift (doesDirectoryExist d) >>= guard
-    ListT $ listDirectory d
+    listDirectory d >>= fromFoldable
 
 checkDir :: FilePath -> ListT IO a -> ListT IO a
 checkDir d rest = do
