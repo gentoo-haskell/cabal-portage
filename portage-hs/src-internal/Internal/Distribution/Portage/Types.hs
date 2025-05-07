@@ -15,6 +15,7 @@ Types for internal use
 {-# Language MultiParamTypeClasses #-}
 {-# Language OverloadedStrings #-}
 {-# Language ScopedTypeVariables #-}
+{-# Language TemplateHaskell #-}
 {-# Language TypeApplications #-}
 {-# Language TypeFamilies #-}
 {-# Language UndecidableInstances #-}
@@ -47,7 +48,7 @@ module Internal.Distribution.Portage.Types
     , FauxVersionNum(..)
     ) where
 
-import Control.Applicative (Alternative, some)
+import Control.Applicative (Alternative)
 import Data.Data (Data)
 import Data.Function (on)
 import Data.Hashable
@@ -66,7 +67,7 @@ newtype Category = Category
     deriving newtype (IsString, Printable)
     deriving anyclass Hashable
 
-instance Stream s m Char => Parsable Category m u s where
+instance Parsable Category st e where
     parserName = "portage category"
     parser = Category <$> wordAllowed wordStart wordRest
       where
@@ -88,7 +89,7 @@ newtype PkgName = PkgName
     deriving newtype (IsString, Printable)
     deriving anyclass Hashable
 
-instance forall m u s. Stream s m Char => Parsable PkgName m u s where
+instance Parsable PkgName st String where
     parserName = "portage package name"
     parser = PkgName <$> pkgParser wordStart wordRest
       where
@@ -139,9 +140,9 @@ instance IsList VersionNum where
 instance Printable VersionNum where
     toString = L.intercalate "." . NE.toList . fmap NE.toList . unwrapVersionNum
 
-instance Stream s m Char => Parsable VersionNum m u s where
+instance Parsable VersionNum st e where
     parserName = "portage version number"
-    parser = versionNumParser (`sepBy1` char '.') (NE.fromList <$>)
+    parser = versionNumParser (`sepBy1` ($(char '.'))) (NE.fromList <$>)
 
 newtype VersionLetter = VersionLetter
     { unwrapVersionLetter :: Char }
@@ -151,7 +152,7 @@ newtype VersionLetter = VersionLetter
 instance Printable VersionLetter where
     toString (VersionLetter l) = [l]
 
-instance Stream s m Char => Parsable VersionLetter m u s where
+instance Parsable VersionLetter st e where
     parserName = "portage version letter"
     parser = VersionLetter <$> satisfy isAsciiLower
 
@@ -172,16 +173,15 @@ instance Printable VersionSuffix where
         SuffixRC    -> "rc"
         SuffixP     -> "p"
 
-instance Stream s m Char => Parsable VersionSuffix m u s where
+instance Parsable VersionSuffix st e where
     parserName = "portage version suffix"
-    parser = choice
-        [ SuffixAlpha <$ try (string "alpha")
-        , SuffixBeta  <$ try (string "beta")
-        , SuffixPre   <$ try (string "pre")
-        , SuffixRC    <$ try (string "rc")
-        , SuffixP     <$ string "p"
-        ]
-
+    parser = $(switch [| case _ of
+                           "alpha" -> pure SuffixAlpha
+                           "beta"  -> pure SuffixBeta
+                           "pre"   -> pure SuffixPre
+                           "rc"    -> pure SuffixRC
+                           "p"     -> pure SuffixP
+                           |])
 newtype VersionSuffixNum = VersionSuffixNum
     { unwrapVersionSuffixNum :: NonEmpty Char }
     deriving stock (Show, Eq, Ord, Data, Generic)
@@ -190,7 +190,7 @@ newtype VersionSuffixNum = VersionSuffixNum
 instance Printable VersionSuffixNum where
     toString = NE.toList . unwrapVersionSuffixNum
 
-instance Stream s m Char => Parsable VersionSuffixNum m u s where
+instance Parsable VersionSuffixNum st e where
     parserName = "portage version suffix number"
     parser = VersionSuffixNum . NE.fromList <$> some (satisfy isDigit)
 
@@ -202,10 +202,10 @@ newtype VersionRevision = VersionRevision
 instance Printable VersionRevision where
     toString (VersionRevision r) = "r" ++ NE.toList r
 
-instance Stream s m Char => Parsable VersionRevision m u s where
+instance Parsable VersionRevision st e where
     parserName = "portage version revision"
     parser = do
-        _ <- char 'r'
+        _ <- $(char 'r')
         VersionRevision . NE.fromList <$> some (satisfy isDigit)
 
 data Version = Version
@@ -249,7 +249,7 @@ instance Printable Version where
       where
         suffixString (ss,sn) = "_" ++ toString ss ++ foldMap toString sn
 
-instance Stream s m Char => Parsable Version m u s where
+instance Parsable Version st e where
     parserName = "portage version"
     parser = versionParser parser
 
@@ -300,28 +300,30 @@ instance Printable ConstrainedDep where
             EqualAsterisk -> "="
             EqualIgnoreRevision -> "~"
 
-instance Stream s m Char => Parsable ConstrainedDep m u s where
+instance Parsable ConstrainedDep st String where
     parserName = "portage package with version constraint"
     parser = do
         o <- operParser
         c <- parser
-        _ <- char '/'
+        _ <- $(char '/')
         n <- parser
-        _ <- char '-'
+        _ <- $(char '-')
         v <- parser
-        o' <- option o $ try $ case o of
-            Equal -> EqualAsterisk <$ char '*'
-            _ -> char '*' *> fail "Unexpected asterisk (not Equal operator)"
-        s <- optionMaybe $ try $ string ":"  *> parser
-        r <- optionMaybe $ try $ string "::" *> parser
+        o' <- withOption (try $ case o of
+                                  Equal -> $(char '*')
+                                  _ -> $(char '*' ) >> err "Unexpected asterisk (not Equal operator)")
+                         (const $ pure EqualAsterisk)
+                         (pure o)
+        s <- optional $ $(string ":") *> parser
+        r <- optional $ $(string "::") *> parser
         pure $ ConstrainedDep o' c n v s r
       where
-        operParser = choice
-            [ char '>' *> option Greater (try (GreaterOrEqual <$ char '='))
-            , char '<' *> option Lesser (try (LesserOrEqual <$ char '='))
-            , Equal <$ char '='
-            , EqualIgnoreRevision <$ char '~'
-            ]
+        operParser = $(switch [| case _ of
+              ">" -> ($(char '=') >> pure GreaterOrEqual) <|> pure Greater
+              "<" -> ($(char '=') >> pure LesserOrEqual) <|> pure Lesser
+              "=" -> pure Equal
+              "~" -> pure EqualIgnoreRevision
+            |])
 
 toConstrainedDep :: Operator -> Package -> Maybe ConstrainedDep
 toConstrainedDep o (Package c n mv ms mr) =
@@ -383,11 +385,11 @@ instance Printable Slot where
         =  s
         ++ foldMap (\ss -> "/" ++ toString ss) mss
 
-instance Stream s m Char => Parsable Slot m u s where
+instance Parsable Slot st e where
     parserName = "portage slot"
     parser = do
         s <- slotParser
-        mss <- optionMaybe $ try $ char '/' *> parser
+        mss <- optional $ $(char '/') *> parser
         pure $ Slot s mss
 
 newtype SubSlot = SubSlot { unwrapSubSlot :: String }
@@ -395,11 +397,11 @@ newtype SubSlot = SubSlot { unwrapSubSlot :: String }
     deriving newtype (IsString, Printable)
     deriving anyclass Hashable
 
-instance Stream s m Char => Parsable SubSlot m u s where
+instance Parsable SubSlot st e where
     parserName = "portage sub-slot"
     parser = SubSlot <$> slotParser
 
-slotParser :: Stream s m Char => ParsecT s u m String
+slotParser :: ParserT st e String
 slotParser = wordAllowed wordStart wordRest
   where
     wordStart =
@@ -420,7 +422,7 @@ newtype Repository = Repository { unwrapRepository :: String }
     deriving newtype (IsString, Printable)
     deriving anyclass Hashable
 
-instance Stream s m Char => Parsable Repository m u s where
+instance Parsable Repository st String where
     parserName = "portage repository"
     parser = Repository <$> pkgParser wordStart wordRest
       where
@@ -452,15 +454,15 @@ instance Printable Package where
         ++ foldMap (\s -> ":"  ++ toString s) ms
         ++ foldMap (\r -> "::" ++ toString r) mr
 
-instance Stream s m Char => Parsable Package m u s where
+instance Parsable Package st String where
     parserName = "portage package"
     parser = do
         c <- parser
-        _ <- char '/'
+        _ <- $(char '/')
         n <- parser
-        v <- optionMaybe $ try $ string "-"  *> parser
-        s <- optionMaybe $ try $ string ":"  *> parser
-        r <- optionMaybe $ try $ string "::" *> parser
+        v <- optional $ $(string "-")  *> parser
+        s <- optional $ $(string ":")  *> parser
+        r <- optional $ $(string "::") *> parser
         pure $ Package c n v s r
 
 -- data EBuildFileName = EBuildFileName
@@ -497,7 +499,7 @@ newtype FauxVersion = FauxVersion
     deriving newtype Printable
     deriving anyclass Hashable
 
-instance Stream s m Char => Parsable FauxVersion m u s where
+instance Parsable FauxVersion st e where
     parserName = "faux portage version"
     parser = FauxVersion <$> versionParser (unwrapFauxVersionNum <$> parser)
 
@@ -510,77 +512,76 @@ newtype FauxVersionNum = FauxVersionNum
     deriving newtype Printable
     deriving anyclass Hashable
 
-instance Stream s m Char => Parsable FauxVersionNum m u s where
+instance Parsable FauxVersionNum st e where
     parserName = "faux portage version number"
     parser = FauxVersionNum <$> versionNumParser id pure
 
-versionParser :: Stream s m Char
-    => ParsecT s u m VersionNum -> ParsecT s u m Version
+versionParser :: ParserT st e VersionNum -> ParserT st e Version
 versionParser pn = do
         n <- pn
-        l <- optionMaybe $ try parser
+        l <- optional parser
         s <- many $ do
-            _ <- char '_'
+            _ <- $(char '_')
             ss <- parser
-            sn <- optionMaybe $ try parser
+            sn <- optional parser
             pure (ss, sn)
-        r <- optionMaybe $ try $ string "-" *> parser
+        r <- optional $ $(string "-") *> parser
         pure $ Version n l s r
 
-versionNumParser :: Stream s m Char
-    => (ParsecT s u m [Char] -> ParsecT s u m [a])
+sepBy1 :: ParserT st e a -> ParserT st e sep -> ParserT st e [a]
+sepBy1 p sep = do
+  x <- p
+  xs <- many (sep >> p)
+  pure (x : xs)
+
+versionNumParser ::
+    (ParserT st e [Char] -> ParserT st e [a])
     -> (NonEmpty a -> NonEmpty (NonEmpty Char))
-    -> ParsecT s u m VersionNum
+    -> ParserT st e VersionNum
 versionNumParser f g = do
     ns <- f $ some $ satisfy isDigit
     pure $ VersionNum $ g $ NE.fromList ns
 
 -- | Both 'PkgName' and 'Repository' have similar parsers
-pkgParser :: forall s u m. Stream s m Char
-    => [Char -> Bool]
+pkgParser :: forall st.
+    [Char -> Bool]
     -> [Char -> Bool]
-    -> ParsecT s u m String
+    -> ParserT st String String
 pkgParser wordStart wordRest = (:) <$> satisfyAny wordStart <*> goOrEnd
   where
-    goOrEnd :: ParsecT s u m String
+    goOrEnd :: ParserT st String String
     goOrEnd = try go <|> end
 
     -- If 'fauxV' gives back a 'Nothing', it means the wole parse ended with
     -- a Version string and we need to throw the error 'e'.
-    go :: ParsecT s u m String
+    go :: ParserT st String String
     go = do
-        m <- choice
-            [ try fauxV
-            , Just <$> nextChar -- 'fauxV' did not match at all :)
-            ]
+        m <- fauxV <|> (Just <$> nextChar)
         maybe e pure m
 
     -- Check for a hyphen followed by something that parses as a 'FauxVersion'.
     -- If this is matched, but there isn't a successful 'go' parser after it,
     -- the parser aborts.
-    fauxV :: ParsecT s u m (Maybe String)
+    fauxV :: ParserT st String (Maybe String)
     fauxV = do
-        h <- char '-'
+        $(char '-')
         v <- parser @FauxVersion
-        choice
-            [ try $ do
+        (do
                 rest <- go -- Don't accept 'end' as a choice at this point
-                pure $ Just $ h : toString v ++ rest
-            , abort
-            ]
+                pure $ Just $ '-' : toString v ++ rest) <|> abort
 
-    nextChar :: ParsecT s u m String
+    nextChar :: ParserT st String String
     nextChar = do
         c <- satisfyAny wordRest
         rest <- goOrEnd
         pure $ c : rest
 
-    end :: ParsecT s u m String
+    end :: ParserT st e String
     end = pure ""
 
     -- 'show' is used here to wrap the string in quotes
-    e :: ParsecT s u m String
-    e = fail $
+    e :: ParserT st String String
+    e = err $ 
             "ends in a hyphen followed by anything "
             ++ "matching the version syntax"
 

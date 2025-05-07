@@ -1,5 +1,4 @@
 {-# Language LambdaCase #-}
-{-# Language TupleSections #-}
 
 module Emerge.ParserTests
     ( parserTests
@@ -9,6 +8,7 @@ import Conduit
 import Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Text.IO as T
+import Data.Text.Encoding (encodeUtf8)
 import System.Directory
 import System.FilePath
 import Test.Tasty
@@ -53,10 +53,12 @@ stdoutTest d o =
     checkCount :: Integer -> Set Package -> Assertion
     checkCount i ps = assertEqual "reported package count should equal set size" (fromInteger i) (S.size ps)
 
-    ecis :: Either ParseError (ParseCoverage, (Integer, Set Package))
-    ecis = runParser (checkCoverage emergeParser) () f o
-
-    f = "test" </> "data" </> d </> "emerge-world-test.stdout"
+    ecis :: Either String (ParseCoverage, (Integer, Set Package))
+    ecis = extract . runParser (checkCoverage emergeParser) . encodeUtf8 $ o
+    
+    extract (OK a _) = Right a
+    extract (Err e) = Left e
+    extract Fail = Left "Parser Tests recoverable failure"
 
 emergeStdOuts :: IO [(FilePath, StdOut)]
 emergeStdOuts = do

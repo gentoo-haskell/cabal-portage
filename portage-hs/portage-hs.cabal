@@ -1,9 +1,9 @@
 cabal-version:      3.0
 name:               portage-hs
-version:            0.1.0.0
+version:            0.2.0.0
 synopsis:           Data structures and functions for interacting with the Portage package manager
 
-tested-with:        GHC == { 9.0.2, 9.2.8, 9.4.8, 9.6.6, 9.8.4, 9.10.1, 9.12.1 }
+tested-with:        GHC == { 9.4.8, 9.6.7, 9.8.4, 9.10.1, 9.12.2 }
 
 description:
     Currently, this includes:
@@ -79,8 +79,8 @@ library
         , process <1.7
         , text <2.2
         , transformers <0.7
-        , parsable <0.2
-        , portage-hs-internal <0.2
+        , parsable >=0.2 && <0.3
+        , portage-hs-internal >=0.2 && <0.3
 
     other-extensions:
         , ApplicativeDo
@@ -99,7 +99,7 @@ library portage-hs-internal
     build-depends:
         , base >=4.13 && <4.22
         , hashable <1.6
-        , parsable <0.2
+        , parsable >= 0.2 && <0.3
     hs-source-dirs:   src-internal
     default-language: Haskell2010
     other-extensions:
@@ -131,10 +131,11 @@ test-suite portage-hs-test
     autogen-modules:
         , Paths_portage_hs
     build-depends:
-        , parsable <0.2
-        , parsable-test <0.2
-        , portage-hs <0.2
-        , portage-hs-internal <0.2
+        , bytestring >=0.12 && <0.13
+        , parsable >=0.2 && <0.3
+        , parsable-test >=0.2 && <0.3
+        , portage-hs >=0.2 && <0.3
+        , portage-hs-internal >=0.2 && <0.3
         , base >=4.13 && <4.22
         , conduit <1.4
         , containers <0.8

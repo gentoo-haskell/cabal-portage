@@ -1,11 +1,12 @@
-{-# Language LambdaCase #-}
-{-# Language TypeApplications #-}
-{-# Language ViewPatterns #-}
+{-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ViewPatterns     #-}
 
 {-# Options_GHC -Wno-orphans #-}
 
 module Types.ValidityTests (validityTests) where
 
+import           Data.ByteString.Char8               (pack)
 import Data.Either (isLeft)
 import qualified Data.List as L
 import qualified Data.List.NonEmpty as NE
@@ -256,7 +257,7 @@ pkgGen
   where
     nonVersion =
         wordGen wordStart wordRest
-            `suchThat` (isLeft . runParsable @Version "")
+            `suchThat` (isLeft . runParsable @Version . pack) 
 
     -- Don't start with @pure ""@ or it will end up creating a string that
     -- starts with @'-'@ (an invalid Package/Repository string)

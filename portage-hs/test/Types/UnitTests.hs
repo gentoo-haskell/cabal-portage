@@ -7,6 +7,7 @@ module Types.UnitTests (unitTests) where
 import Data.List.NonEmpty (NonEmpty(..))
 import Test.Tasty
 import Test.Tasty.HUnit
+import Data.ByteString.Char8 (pack)
 
 import Internal.Distribution.Portage.Types
 import Data.Parsable
@@ -204,11 +205,17 @@ unitTests = testGroup "unit tests"
 
 -- Takes a string and an expected result, and creates a TestTree from them
 parserTest :: forall a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Eq a
     , Show a
     ) => String
     -> a
     -> TestTree
 parserTest s x = testCase (show s) $
-    Right (CompleteParse, x) @=? runParser (checkParsable @a) () "" s
+    Right (CompleteParse, x) @=? extract (runParser (checkParsable @a) (pack s))
+      where
+        extract :: Result String (ParseCoverage, a) -> Either String (ParseCoverage, a)
+        extract (OK a _) = Right a
+        extract (Err e) = Left e
+        extract Fail = Left "Unit Tests recoverable failure"
+
