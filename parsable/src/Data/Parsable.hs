@@ -19,22 +19,22 @@ Look at the @Language Extensions@ section of the GHC documentation for
 instructions on how to use these extensions.
 -}
 
-{-# Language DataKinds #-}
-{-# Language DefaultSignatures #-}
-{-# Language DeriveDataTypeable #-}
-{-# Language DeriveGeneric #-}
-{-# Language DeriveTraversable #-}
-{-# Language DerivingVia #-}
-{-# Language FlexibleContexts #-}
-{-# Language FlexibleInstances #-}
-{-# Language GeneralizedNewtypeDeriving #-}
-{-# Language MultiParamTypeClasses #-}
-{-# Language OverloadedStrings #-}
-{-# Language QuantifiedConstraints #-}
-{-# Language ScopedTypeVariables #-}
-{-# Language TypeApplications #-}
-{-# Language TypeFamilies #-}
-{-# Language UndecidableInstances #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DefaultSignatures          #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE DerivingVia                #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuantifiedConstraints      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Data.Parsable
     (
@@ -68,22 +68,22 @@ module Data.Parsable
     , STMode
     ) where
 
-import Control.Applicative hiding (many)
-import Control.Monad
-import Control.Monad.ST (ST)
-import Control.Monad.Trans.Class
-import Data.ByteString (ByteString)
-import Data.Char hiding (isDigit)
-import Data.Data
-import Data.Functor.Identity
-import Data.String
-import Data.Text (Text, unpack)
-import FlatParse.Basic
-import FlatParse.Basic.Text
-import FlatParse.Common.Parser (IOMode, PureMode, STMode)
-import GHC.Exts (ZeroBitType)
-import GHC.Generics
-import Text.Read (readMaybe)
+import           Control.Applicative       hiding (many)
+import           Control.Monad
+import           Control.Monad.ST          (ST)
+import           Control.Monad.Trans.Class
+import           Data.ByteString           (ByteString)
+import           Data.Char                 hiding (isDigit)
+import           Data.Data
+import           Data.Functor.Identity
+import           Data.String
+import           Data.Text                 (Text, unpack)
+import           FlatParse.Basic
+import           FlatParse.Basic.Text
+import           FlatParse.Common.Parser   (IOMode, PureMode, STMode)
+import           GHC.Exts                  (ZeroBitType)
+import           GHC.Generics
+import           Text.Read                 (readMaybe)
 
 newtype ParserName a (st :: ZeroBitType) e = ParserName { getParserName :: String }
     deriving stock (Show, Eq, Ord)
@@ -104,7 +104,7 @@ instance (Read a, Typeable a)
     parser = (<?> "natural number") $ do
         ds <- some (satisfy isDigit)
         case readMaybe ds of
-            Just i -> pure $ NaturalParsable i
+            Just i  -> pure $ NaturalParsable i
             Nothing -> err $ "Could not parse as " ++ t ++ ": " ++ show ds
       where
         t = show $ typeRep $ Proxy @a
@@ -151,8 +151,7 @@ satisfyAny fs = satisfy $ \c -> or [f c | f <- fs]
 -- | Parsing of "words" which require a list of predicates for the first
 --   token, and a list of predicates for any remaining tokens. This always
 --   parses at least one token.
-wordAllowed
-    :: [Char -> Bool] -- ^ Tokens that start the word
+wordAllowed :: [Char -> Bool] -- ^ Tokens that start the word
     -> [Char -> Bool] -- ^ Any subsequent tokens
     -> ParserT st e [Char]
 wordAllowed beg rest = (:) <$> satisfyAny beg <*> many (satisfyAny rest)

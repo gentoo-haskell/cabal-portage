@@ -4,21 +4,21 @@ Module      : Distribution.Portage.Internal.Types
 Types for internal use
 -}
 
-{-# Language DeriveAnyClass #-}
-{-# Language DeriveDataTypeable #-}
-{-# Language DeriveGeneric #-}
-{-# Language DerivingVia #-}
-{-# Language FlexibleContexts #-}
-{-# Language FlexibleInstances #-}
-{-# Language GeneralizedNewtypeDeriving #-}
-{-# Language LambdaCase #-}
-{-# Language MultiParamTypeClasses #-}
-{-# Language OverloadedStrings #-}
-{-# Language ScopedTypeVariables #-}
-{-# Language TemplateHaskell #-}
-{-# Language TypeApplications #-}
-{-# Language TypeFamilies #-}
-{-# Language UndecidableInstances #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingVia                #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Internal.Distribution.Portage.Types
     (
@@ -48,18 +48,18 @@ module Internal.Distribution.Portage.Types
     , FauxVersionNum(..)
     ) where
 
-import Control.Applicative (Alternative)
-import Data.Data (Data)
-import Data.Function (on)
-import Data.Hashable
-import qualified Data.List as L
-import Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
-import GHC.Exts (IsList(..))
-import GHC.Generics (Generic)
-import GHC.Natural (Natural)
+import           Control.Applicative (Alternative)
+import           Data.Data           (Data)
+import           Data.Function       (on)
+import           Data.Hashable
+import qualified Data.List           as L
+import           Data.List.NonEmpty  (NonEmpty (..))
+import qualified Data.List.NonEmpty  as NE
+import           GHC.Exts            (IsList (..))
+import           GHC.Generics        (Generic)
+import           GHC.Natural         (Natural)
 
-import Data.Parsable
+import           Data.Parsable
 
 newtype Category = Category
     { unwrapCategory :: String }
@@ -127,7 +127,7 @@ instance Ord VersionNum where
             xs -> (False, xs)
           where
             skipTrailing0s '0' [] = []
-            skipTrailing0s c cs = c:cs
+            skipTrailing0s c cs   = c:cs
 
         toNat :: NonEmpty Char -> Natural
         toNat = read . toList
@@ -209,8 +209,8 @@ instance Parsable VersionRevision st e where
         VersionRevision . NE.fromList <$> some (satisfy isDigit)
 
 data Version = Version
-    { getVersionNum :: VersionNum
-    , getVersionLetter :: Maybe VersionLetter
+    { getVersionNum      :: VersionNum
+    , getVersionLetter   :: Maybe VersionLetter
     , getVersionSuffixes :: [(VersionSuffix, Maybe VersionSuffixNum)]
     , getVersionRevision :: Maybe VersionRevision
     } deriving stock (Show, Eq, Data, Generic)
@@ -288,16 +288,16 @@ instance Printable ConstrainedDep where
       where
         asterisk = case o of
             EqualAsterisk -> "*"
-            _ -> ""
+            _             -> ""
 
         operStr :: String
         operStr = case o of
-            Lesser -> "<"
-            LesserOrEqual -> "<="
-            Greater -> ">"
-            GreaterOrEqual -> ">="
-            Equal -> "="
-            EqualAsterisk -> "="
+            Lesser              -> "<"
+            LesserOrEqual       -> "<="
+            Greater             -> ">"
+            GreaterOrEqual      -> ">="
+            Equal               -> "="
+            EqualAsterisk       -> "="
             EqualIgnoreRevision -> "~"
 
 instance Parsable ConstrainedDep st String where
@@ -361,9 +361,9 @@ doesConstraintMatch (ConstrainedDep co cc cn cv cs cr) (Package pc pn pv ps pr)
                         (toList (getVersionNum cv))
                         (toList (getVersionNum v))
   where
-    checkEqAst [] [] = True
-    checkEqAst (_cv:_cvs) [] = False
-    checkEqAst [] (_v:_vs) = True
+    checkEqAst [] []            = True
+    checkEqAst (_cv:_cvs) []    = False
+    checkEqAst [] (_v:_vs)      = True
     checkEqAst (cv':cvs) (v:vs) = cv' == v && checkEqAst cvs vs
 
     checkConstrained :: Eq a => Maybe a -> Maybe a -> Bool
@@ -371,7 +371,7 @@ doesConstraintMatch (ConstrainedDep co cc cn cv cs cr) (Package pc pn pv ps pr)
         -- Constraint specifies, package provides
         (Just x1, Just x2) -> x1 == x2
         -- Package does not specifiy
-        _ -> True
+        _                  -> True
 
 data Slot = Slot
     { unwrapSlot :: String

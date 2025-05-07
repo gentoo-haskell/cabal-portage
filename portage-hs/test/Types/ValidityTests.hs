@@ -7,17 +7,17 @@
 module Types.ValidityTests (validityTests) where
 
 import           Data.ByteString.Char8               (pack)
-import Data.Either (isLeft)
-import qualified Data.List as L
-import qualified Data.List.NonEmpty as NE
-import Data.Proxy
-import GHC.Natural
-import Test.QuickCheck
-import Test.Tasty
+import           Data.Either                         (isLeft)
+import qualified Data.List                           as L
+import qualified Data.List.NonEmpty                  as NE
+import           Data.Proxy
+import           GHC.Natural
+import           Test.QuickCheck
+import           Test.Tasty
 
-import Data.Parsable
-import Test.Parsable
-import Internal.Distribution.Portage.Types
+import           Data.Parsable
+import           Internal.Distribution.Portage.Types
+import           Test.Parsable
 
 
 validityTests :: STM TestTree
@@ -225,8 +225,7 @@ instance Arbitrary FauxVersionNum where
 -- > It [...] must not end in a hyphen followed by anything matching the
 -- > version syntax described in section 3.2.
 instance Arbitrary FauxVersion where
-    arbitrary = fmap FauxVersion $ Version
-        <$> (unwrapFauxVersionNum <$> arbitrary)
+    arbitrary = fmap FauxVersion $ (Version . unwrapFauxVersionNum <$> arbitrary)
         <*> liftArbitrary arbitrary
         <*> liftArbitrary (liftArbitrary arbitrary)
         <*> liftArbitrary arbitrary

@@ -4,13 +4,13 @@ Module      : Test.Parsable
 Test functions for 'Parsable' and 'Printable'.
 -}
 
-{-# Language CPP #-}
-{-# Language DerivingVia #-}
-{-# Language FlexibleContexts #-}
-{-# Language LambdaCase #-}
-{-# Language ScopedTypeVariables #-}
-{-# Language TupleSections #-}
-{-# Language TypeApplications #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module Test.Parsable
     (
@@ -35,19 +35,18 @@ module Test.Parsable
     , module Data.Void
     ) where
 
-import Control.Monad.STM
-import Control.Concurrent.STM.TChan
-import Data.ByteString (ByteString)
+import           Control.Concurrent.STM.TChan
+import           Control.Monad.STM
+import           Data.ByteString (ByteString)
 import Data.ByteString.Char8 (pack)
-import Data.Function (fix)
-import Data.Semigroup (Last(..))
-import Data.Typeable
-import Data.Void
-import Test.Tasty
-import Test.Tasty.HUnit
-import Test.Tasty.QuickCheck hiding (checkCoverage)
-
-import Data.Parsable
+import           Data.Function                (fix)
+import           Data.Parsable
+import           Data.Semigroup               (Last (..))
+import           Data.Typeable
+import           Data.Void
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck        hiding (checkCoverage)
 
 -- | If a parse succeeds for the beginning of the input, but then fails, we
 --   choose the 'PartialParse' constructor. If the entire parse was successful,

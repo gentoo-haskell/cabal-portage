@@ -1,32 +1,31 @@
-{-# Language LambdaCase #-}
+{-# LANGUAGE LambdaCase #-}
+
 
 module Emerge.ParserTests
     ( parserTests
     ) where
 
-import Conduit
-import Data.Set (Set)
-import qualified Data.Set as S
-import qualified Data.Text.IO as T
+import           Conduit
+import           Data.Set                           (Set)
+import qualified Data.Set                           as S
+import qualified Data.Text.IO                       as T
 import Data.Text.Encoding (encodeUtf8)
-import System.Directory
-import System.FilePath
-import Test.Tasty
-import Test.Tasty.HUnit
+import           System.Directory
+import           System.FilePath
+import           Test.Tasty
+import           Test.Tasty.HUnit
 
-import Data.Parsable
-import Distribution.Portage.Types
-import Distribution.Portage.Emerge
-import Distribution.Portage.Emerge.Parser
-import Test.Parsable
+import           Data.Parsable
+import           Distribution.Portage.Emerge
+import           Distribution.Portage.Emerge.Parser
+import           Distribution.Portage.Types
+import           Test.Parsable
 
-import Paths_portage_hs (getDataFileName)
+import           Paths_portage_hs                   (getDataFileName)
 
 parserTests :: IO TestTree
 parserTests = do
-    stdouts <- emergeStdOuts
-    pure $ testGroup "test against recorded emerge output" $
-        map (uncurry stdoutTest) stdouts
+    testGroup "test against recorded emerge output" . map (uncurry stdoutTest) <$> emergeStdOuts
 
 stdoutTest :: FilePath -> StdOut -> TestTree
 stdoutTest d o =
