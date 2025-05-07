@@ -31,13 +31,14 @@ module Test.Parsable
     , checkParsable
     , checkCoverage
       -- * Re-exports
-    , ParseError
     , module Control.Monad.STM
     , module Data.Void
     ) where
 
 import Control.Monad.STM
 import Control.Concurrent.STM.TChan
+import Data.ByteString (ByteString)
+import Data.ByteString.Char8 (pack)
 import Data.Function (fix)
 import Data.Semigroup (Last(..))
 import Data.Typeable
@@ -46,7 +47,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck hiding (checkCoverage)
 
-import Data.Parsable hiding (label)
+import Data.Parsable
 
 -- | If a parse succeeds for the beginning of the input, but then fails, we
 --   choose the 'PartialParse' constructor. If the entire parse was successful,
@@ -65,7 +66,7 @@ data ParseCoverage
 -- | QuickCheck tests for any 'Parsable' type. Currently this only checks
 --   'parsableProp'.
 parsableQuickCheck :: forall proxy a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Arbitrary a
     , Eq a
@@ -81,14 +82,14 @@ parsableQuickCheck p = do
 -- | QuickCheck property that verifies the "round-trip law" of any type
 --   which is both 'Parsable' and 'Printable'.
 parsableProp :: forall a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Eq a
     , Show a
-    ) => TChan ParseError -> a -> Property
+    ) => TChan String -> a -> Property
 parsableProp c x = whenFail (printErrorTChan c) $ idempotentIOProperty $ do
     let s = toString x
-    let r = runCheckParsable @a s
+    let r = runCheckParsable @a (pack s)
     _ <- either (atomically . writeTChan c) (const (pure ())) r
 #if defined(VERBOSE_TESTS)
     pure $ label s $ r === Right (CompleteParse, x)
@@ -102,7 +103,7 @@ parsableProp c x = whenFail (printErrorTChan c) $ idempotentIOProperty $ do
 --
 --   * 'parsableAssertion'
 parsableHUnit :: forall proxy a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Show a
     ) => proxy a -> String -> TestTree
@@ -115,7 +116,7 @@ parsableHUnit p str = testCase (show str) $ parsableAssertion p str
 --   * 'parsableAssertion'
 --   * 'printableAssertion'
 printableHUnit :: forall a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Show a
     , Eq a) => a -> TestTree
@@ -128,11 +129,11 @@ printableHUnit x = testCase (show str) $ do
 --   converted back to a string. This HUnit assertion verifies that the
 --   resulting string is the same as the original.
 parsableAssertion :: forall proxy a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Show a
     ) => proxy a -> String -> Assertion
-parsableAssertion _ s = case runCheckParsable @a s of
+parsableAssertion _ s = case runCheckParsable @a (pack s) of
     Left e ->
         assertFailure $
             "Could not parse: " ++ s ++ "\n"
@@ -148,18 +149,18 @@ parsableAssertion _ s = case runCheckParsable @a s of
 --   parsed. This HUnit assertion verifies that the parse result is the same as
 --   the original value.
 printableAssertion :: forall a.
-    ( Parsable a Identity () String
+    ( Parsable a PureMode String
     , Printable a
     , Show a
     , Eq a
     ) => a -> Assertion
-printableAssertion x = ppAssertion f $ runCheckParsable (toString x)
+printableAssertion x = ppAssertion f $ runCheckParsable (pack . toString $ x)
     where f = assertEqual "parse result equals original" x
 
 ppAssertion ::
     ( Show a
     ) => (a -> Assertion)
-    -> Either ParseError (ParseCoverage, a)
+    -> Either String (ParseCoverage, a)
     -> Assertion
 ppAssertion f = \case
     Left e ->
@@ -172,34 +173,33 @@ ppAssertion f = \case
             ++ "Output: " ++ show p ++ "\n"
     Right (CompleteParse, x) -> f x
 
+extract :: Result String a -> Either String a
+extract (OK a _) = Right a
+extract (Err e) = Left e
+extract Fail = Left "Parsable Tests recoverable failure"
 
 -- | Parses a string as the given 'Parsable' value
 runCheckParsable
-    :: Parsable a Identity () String
-    => String
-    -> Either ParseError (ParseCoverage, a)
-runCheckParsable = runParser checkParsable () ""
+    :: Parsable a PureMode String
+    => ByteString
+    -> Either String (ParseCoverage, a)
+runCheckParsable = extract . runParser checkParsable
 
 -- | Convenience function that runs 'checkCoverage' on a 'Parsable' parser.
 checkParsable
-    :: forall a s u m
-    .  (Stream s m Char, Parsable a m u s)
-    => ParsecT s u m (ParseCoverage, a)
-checkParsable = checkCoverage (parser <?> n)
-    where n = getParserName $ parserName @a @m @u @s
+    :: Parsable a st e => ParserT st e (ParseCoverage, a)
+checkParsable = checkCoverage parser
 
 -- | Run the specified parser, then return 'CompleteParse' if we are at
 --   'eof', otherwise 'PartialParse'.
-checkCoverage
-    :: Stream s m Char
-    => ParsecT s u m a
-    -> ParsecT s u m (ParseCoverage, a)
+checkCoverage ::
+    ParserT st e a
+    -> ParserT st e (ParseCoverage, a)
 checkCoverage p = do
     x <- p
-    (,x) <$> choice
-        [ CompleteParse <$ eof
-        , PartialParse  <$> lookAhead (anyToken `manyTill` eof)
-        ]
+    (,x) <$>
+      (CompleteParse <$ eof) <|>
+      (PartialParse  <$> traceRest)
 
 -- | Generator which takes two lists of predicates which specify valid
 --   characters.
@@ -219,9 +219,9 @@ wordGen wordStart wordRest = do
     anySat l x = or [f x | f <- l]
 
 
-printErrorTChan :: TChan ParseError -> IO ()
+printErrorTChan :: TChan String -> IO ()
 printErrorTChan c = fix $ \loop -> do
     me <- atomically $ tryReadTChan c
     case me of
-        Just e  -> putStrLn (show e) *> loop
+        Just e  -> print e *> loop
         Nothing -> pure ()
