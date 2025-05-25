@@ -11,6 +11,7 @@ Specification.
 {-# Language FlexibleContexts #-}
 {-# Language FlexibleInstances #-}
 {-# Language GeneralizedNewtypeDeriving #-}
+{-# Language LambdaCase #-}
 {-# Language MultiParamTypeClasses #-}
 {-# Language OverloadedStrings #-}
 {-# Language TemplateHaskell #-}
@@ -19,6 +20,7 @@ module Distribution.Portage.Types.DepSpec
 (   -- * Full dependency spec
       DepSpec(..)
     -- * Misc
+    , Block(..)
     , Slot(..)
     , SubSlot(..)
     , Repository(..)
@@ -36,12 +38,14 @@ import Distribution.Portage.Types.VersionedPkg
 
 data DepSpec =
     VersionedDepSpec
-    { depSpecVersionedPkg :: VersionedPkg
+    { depSpecBlock :: Maybe Block
+    , depSpecVersionedPkg :: VersionedPkg
     , depSpecSlot :: Maybe Slot
     , depSpecUseDependency :: Maybe UseDependency
     }
     | UnversionedDepSpec
-    { depSpecPackage :: Package
+    { depSpecBlock :: Maybe Block
+    , depSpecPackage :: Package
     , depSpecSlot :: Maybe Slot
     , depSpecUseDependency :: Maybe UseDependency
     }
@@ -51,26 +55,48 @@ instance Parsable DepSpec st String where
     parserName = "portage full dependency spec"
     parser = choice
         [ try $ do
+            mb <- optional parser
             vp <- parser
             s <- optional $ $( char ':' ) *> parser
             ud <- optional parser
-            pure $ VersionedDepSpec vp s ud
+            pure $ VersionedDepSpec mb vp s ud
         , do
+            mb <- optional parser
             p <- parser
             s <- optional $ $( char ':' ) *> parser
             ud <- optional parser
-            pure $ UnversionedDepSpec p s ud
+            pure $ UnversionedDepSpec mb p s ud
         ]
 
 instance Printable DepSpec where
-    toString (VersionedDepSpec vp ms ud)
-        =  toString vp
+    toString (VersionedDepSpec mb vp ms ud)
+        =  foldMap toString mb
+        ++ toString vp
         ++ foldMap (\s -> ":" ++ toString s) ms
         ++ foldMap toString ud
-    toString (UnversionedDepSpec p ms ud)
-        =  toString p
+    toString (UnversionedDepSpec mb p ms ud)
+        =  foldMap toString mb
+        ++ toString p
         ++ foldMap (\s -> ":" ++ toString s) ms
         ++ foldMap toString ud
+
+data Block
+    = WeakBlock
+    | StrongBlock
+    deriving stock (Show, Eq, Ord, Bounded, Enum, Data, Generic)
+
+instance Parsable Block st e where
+    parserName = "portage blocker operator"
+    parser = $(switch
+        [| case _ of
+            "!!" -> pure StrongBlock
+            "!" -> pure WeakBlock
+        |])
+
+instance Printable Block where
+    toString = \case
+        WeakBlock -> "!"
+        StrongBlock -> "!!"
 
 data Slot
     = AnySlot

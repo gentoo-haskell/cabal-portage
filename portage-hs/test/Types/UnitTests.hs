@@ -54,6 +54,7 @@ unitTests = testGroup "unit tests"
                 )
         , "dev-python/nose:1337" `parserTest`
             UnversionedDepSpec
+                Nothing
                 (Package
                     (Category "dev-python")
                     (PkgName "nose")
@@ -62,6 +63,7 @@ unitTests = testGroup "unit tests"
                 Nothing
         , "dev-python/nose" `parserTest`
             UnversionedDepSpec
+                Nothing
                 (Package
                     (Category "dev-python")
                     (PkgName "nose")
@@ -70,6 +72,7 @@ unitTests = testGroup "unit tests"
                 Nothing
         ,  "=dev-python/nose-1.23a-r123:1337" `parserTest`
             VersionedDepSpec
+                Nothing
                 (VPkgEq
                     (Package
                         (Category "dev-python")
@@ -98,6 +101,7 @@ unitTests = testGroup "unit tests"
                 )
         , "=dev-python/nose-1.23*:*" `parserTest`
             VersionedDepSpec
+                Nothing
                 (VPkgEqWildcard
                     (Package
                         (Category "dev-python")
@@ -188,8 +192,25 @@ unitTests = testGroup "unit tests"
                     []
                     Nothing
                 )
-        , "=app-derp/f--98---54.321x_pre1:gawk--" `parserTest`
+        , "!!=app-derp/f--98---54.321x_pre1:gawk--" `parserTest`
             VersionedDepSpec
+                (Just StrongBlock)
+                (VPkgEq
+                    (Package
+                        (Category "app-derp")
+                        (PkgName "f--98--")
+                    )
+                    (Version
+                        (VersionNum (('5':|"4") :| ['3':|"21"]))
+                        (Just (VersionLetter 'x'))
+                        [ (SuffixPre, Just (VersionSuffixNum ('1' :| []))) ]
+                        Nothing
+                    )
+                )
+                (Just (Slot "gawk--" Nothing))
+                Nothing        , "=app-derp/f--98---54.321x_pre1:gawk--" `parserTest`
+            VersionedDepSpec
+                Nothing
                 (VPkgEq
                     (Package
                         (Category "app-derp")
@@ -206,6 +227,7 @@ unitTests = testGroup "unit tests"
                 Nothing
         , "=app-office/hledger-web-1.26.1:0/1.26.1=[profile(+)?,-test]" `parserTest`
             VersionedDepSpec
+                Nothing
                 (VPkgEq
                     (Package
                         (Category "app-office")
@@ -239,6 +261,7 @@ unitTests = testGroup "unit tests"
         , "p" `parserTest` SuffixP
         , "F/z-tNk[s(+)?]" `parserTest`
             UnversionedDepSpec
+                Nothing
                 (Package
                     (Category "F")
                     (PkgName "z-tNk")
