@@ -114,7 +114,7 @@ test-suite portage-hs-test
         , Paths_portage_hs
     build-depends:
         , parsable >=0.1 && <0.2
-        , parsable-test >=0.2 && <0.3
+        , parsable-test >=0.1 && <0.2
         , portage-hs >=0.2 && <0.3
         , base >=4.17 && <4.22
         , bytestring >=0.11 && <0.13

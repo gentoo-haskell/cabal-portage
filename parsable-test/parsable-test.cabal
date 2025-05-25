@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               parsable-test
-version:            0.2.0.0
+version:            0.1.0.0
 synopsis:           Test functions for the parsable package
 
 tested-with:        GHC == { 9.4.8, 9.6.7, 9.8.4, 9.10.1, 9.12.2 }
