@@ -1,7 +1,7 @@
 {-|
 Module      : Distribution.Portage.Types
 
-Types for Portage basic portage package atoms (category/name)
+Types for basic Gentoo qualified package atoms (category/name)
 -}
 
 {-# Language DeriveDataTypeable #-}

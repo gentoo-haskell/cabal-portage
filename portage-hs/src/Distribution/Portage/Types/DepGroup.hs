@@ -1,7 +1,11 @@
 {-|
 Module      : Distribution.Portage.Types.DepGroup
 
-Types for groups in Gentoo dependency blocks
+Group elements in the Gentoo Package Manager Specification. (Specifically,
+those that are valid in dependency specifications such as @DEPEND@.)
+
+Also, blocks of 'DepSpec's or 'DepGroup's that make up the entirity of
+dependency class strings, such as what is defined as @RDEPEND@.
 -}
 
 {-# Language DeriveDataTypeable #-}
@@ -96,8 +100,9 @@ instance Printable DepGroup where
     toString (UseGroup gs u) = groupToString (toString u ++ "? ") gs
     toString (NotUseGroup gs u) = groupToString ("!" ++ toString u ++ "? ") gs
 
--- | Top-level blocks of zero or more 'DepGroup's and 'DepSpec's. (For
---   instance, what you would find in @DEPEND@.)
+-- | Top-level blocks of zero or more 'DepGroup's and 'DepSpec's that make
+--   up the entirity of dependency class strings, such as what is defined as
+--   @RDEPEND@.
 newtype DepBlock = DepBlock { unDepBlock :: [Either DepGroup DepSpec] }
     deriving stock (Show, Eq, Ord, Data, Generic)
 

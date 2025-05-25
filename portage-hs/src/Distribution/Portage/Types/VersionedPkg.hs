@@ -1,7 +1,8 @@
 {-|
 Module      : Distribution.Portage.Types.VersionedPkg
 
-Types for Portage packages with specific version constraints
+Types for packages with specific version constraints as defined in the Gentoo
+Package Manager Specification.
 -}
 
 {-# Language DeriveDataTypeable #-}
@@ -34,14 +35,22 @@ import Distribution.Portage.Types.Version
 
 -- | One constructor per operator as defined in section 8.3.1 in the PMS
 data VersionedPkg
-    = VPkgLT Package Version
+    = -- | @<@
+      VPkgLT Package Version
+      -- | @<=@
     | VPkgLE Package Version
+      -- | @>@
     | VPkgGT Package Version
+      -- | @>=@
     | VPkgGE Package Version
+      -- | @=@
     | VPkgEq Package Version
+      -- | @~@
     | VPkgEqIgnoreRev Package Version
-    -- | Special exception: if the version specified has an asterisk
-    --   immediately following it...
+    -- | "Special exception: if the version specified has an asterisk
+    --   immediately following it..." Acts as a version wildcard.
+    --
+    --   e.g. @=app-misc/blah-1.2*@
     | VPkgEqWildcard Package Version
     deriving stock (Show, Eq, Ord, Data, Generic)
 
@@ -94,6 +103,8 @@ defVersionedPkgParse = do
     v <- parser
     pure (p,v)
 
+-- | Does a specific 'Package' + 'Version' fall in the range specified by a
+--   'VersionedPkg'? e.g. would a Gentoo package manager consider it a match?
 matchVersionedPackage :: VersionedPkg -> Package -> Version -> Bool
 matchVersionedPackage vp pkg ver =
     case vp of

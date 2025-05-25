@@ -1,7 +1,8 @@
 {-|
 Module      : Distribution.Portage.Types
 
-Types for Portage atom versions
+Types for package versions as defined in the Gentoo Package Manager
+Specification.
 -}
 
 {-# Language DeriveDataTypeable #-}

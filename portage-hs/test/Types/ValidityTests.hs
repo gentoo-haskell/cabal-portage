@@ -1,3 +1,9 @@
+{-|
+Module: Types.ValidityTests
+
+Tests against random automatically-generated input.
+-}
+
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns     #-}

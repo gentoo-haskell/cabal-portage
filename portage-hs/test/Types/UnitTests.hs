@@ -1,3 +1,10 @@
+{-|
+Module: Types.UnitTests
+
+Custom-written unit tests for testing basic functionality or
+input that has caused problems in the past.
+-}
+
 {-# Language FlexibleContexts #-}
 {-# Language OverloadedStrings #-}
 {-# Language ScopedTypeVariables #-}

@@ -1,7 +1,8 @@
 {-|
 Module      : Distribution.Portage.Types.UseDep
 
-Types for Portage USE flag dependencies
+Types for USE flag dependencies as defined in the Gentoo Package Manager
+Specification.
 -}
 
 {-# Language DeriveDataTypeable #-}

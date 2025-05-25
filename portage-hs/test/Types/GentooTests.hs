@@ -1,3 +1,9 @@
+{-|
+Module: Types.GentooTests
+
+Tests that require a running Gentoo system to test against.
+-}
+
 {-# Language ScopedTypeVariables #-}
 {-# Language TypeApplications #-}
 

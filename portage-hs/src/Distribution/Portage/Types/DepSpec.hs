@@ -1,7 +1,8 @@
 {-|
 Module      : Distribution.Portage.Types.DepSpec
 
-Types for full Portage dependency specifications
+Full dependency specification as defined in the Gentoo Package Manager
+Specification.
 -}
 
 {-# Language DeriveDataTypeable #-}
