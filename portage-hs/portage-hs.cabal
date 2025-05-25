@@ -64,6 +64,7 @@ library
         , Distribution.Portage.Types
         , Distribution.Portage.Types.DepGroup
         , Distribution.Portage.Types.DepSpec
+        , Distribution.Portage.Types.Misc
         , Distribution.Portage.Types.Package
         , Distribution.Portage.Types.UseDep
         , Distribution.Portage.Types.Version

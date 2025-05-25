@@ -55,6 +55,7 @@ module Distribution.Portage.Types
     ) where
 
 import Distribution.Portage.Types.Package
+import Distribution.Portage.Types.Misc
 import Distribution.Portage.Types.UseDep
 import Distribution.Portage.Types.Version
 import Distribution.Portage.Types.VersionedPkg

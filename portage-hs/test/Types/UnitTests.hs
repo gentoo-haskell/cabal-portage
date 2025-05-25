@@ -60,8 +60,7 @@ unitTests = testGroup "unit tests"
                 )
                 Nothing
                 (Just (Slot "1337" Nothing))
-                Nothing
-        , "dev-python/nose::uberRepo" `parserTest`
+        , "dev-python/nose" `parserTest`
             UnversionedDepSpec
                 (Package
                     (Category "dev-python")
@@ -69,8 +68,7 @@ unitTests = testGroup "unit tests"
                 )
                 Nothing
                 Nothing
-                (Just (Repository "uberRepo"))
-        ,  "=dev-python/nose-1.23a-r123:1337::uberRepo" `parserTest`
+        ,  "=dev-python/nose-1.23a-r123:1337" `parserTest`
             VersionedDepSpec
                 (VPkgEq
                     (Package
@@ -86,7 +84,6 @@ unitTests = testGroup "unit tests"
                 )
                 Nothing
                 (Just (Slot "1337" Nothing))
-                (Just (Repository "uberRepo"))
         , "=dev-python/nose-1.23*" `parserTest`
             VPkgEqWildcard
                 (Package
@@ -115,7 +112,6 @@ unitTests = testGroup "unit tests"
                 )
                 Nothing
                 (Just AnySlot)
-                Nothing
         , "[profile?,-test]" `parserTest`
             UseDependency
                 (UseDepMatchIfEnabled "profile" Nothing
@@ -192,7 +188,7 @@ unitTests = testGroup "unit tests"
                     []
                     Nothing
                 )
-        , "=app-derp/f--98---54.321x_pre1:gawk--::goo" `parserTest`
+        , "=app-derp/f--98---54.321x_pre1:gawk--" `parserTest`
             VersionedDepSpec
                 (VPkgEq
                     (Package
@@ -208,8 +204,7 @@ unitTests = testGroup "unit tests"
                 )
                 Nothing
                 (Just (Slot "gawk--" Nothing))
-                (Just (Repository "goo"))
-        , "=app-office/hledger-web-1.26.1[profile(+)?,-test]:0/1.26.1=::haskell" `parserTest`
+        , "=app-office/hledger-web-1.26.1[profile(+)?,-test]:0/1.26.1=" `parserTest`
             VersionedDepSpec
                 (VPkgEq
                     (Package
@@ -229,11 +224,9 @@ unitTests = testGroup "unit tests"
                     )
                 ))
                 (Just (SlotBreakable "0" (Just (SubSlot "1.26.1"))))
-                (Just (Repository "haskell"))
         ]
     , testGroup "failed QuickCheck tests"
-        [ "7-r2b" `parserTest` Repository "7-r2b"
-        , "7-r2b" `parserTest` PkgName "7-r2b"
+        [ "7-r2b" `parserTest` PkgName "7-r2b"
         , "1.3.7_p20211111_p1" `parserTest` Version
                     (VersionNum
                         (('1':|[]) :| ['3':|[],'7':|[]])
@@ -244,7 +237,7 @@ unitTests = testGroup "unit tests"
                     ]
                     Nothing
         , "p" `parserTest` SuffixP
-        , "F/z-tNk[s(+)?]::v" `parserTest`
+        , "F/z-tNk[s(+)?]" `parserTest`
             UnversionedDepSpec
                 (Package
                     (Category "F")
@@ -256,7 +249,6 @@ unitTests = testGroup "unit tests"
                     )
                 ))
                 Nothing
-                (Just (Repository "v"))
         ]
     ]
 

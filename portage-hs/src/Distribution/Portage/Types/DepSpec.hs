@@ -29,6 +29,7 @@ import GHC.Generics (Generic)
 
 import Data.Parsable
 
+import Distribution.Portage.Types.Misc
 import Distribution.Portage.Types.Package
 import Distribution.Portage.Types.UseDep
 import Distribution.Portage.Types.VersionedPkg
@@ -38,13 +39,11 @@ data DepSpec =
     { depSpecVersionedPkg :: VersionedPkg
     , depSpecUseDependency :: Maybe UseDependency
     , depSpecSlot :: Maybe Slot
-    , depSpecRepository :: Maybe Repository
     }
     | UnversionedDepSpec
     { depSpecPackage :: Package
     , depSpecUseDependency :: Maybe UseDependency
     , depSpecSlot :: Maybe Slot
-    , depSpecRepository :: Maybe Repository
     }
     deriving stock (Show, Eq, Ord, Data, Generic)
 
@@ -55,27 +54,23 @@ instance Parsable DepSpec st String where
             vp <- parser
             ud <- optional parser
             s <- optional $ $( char ':' ) *> parser
-            r <- optional $ $( string "::" ) *> parser
-            pure $ VersionedDepSpec vp ud s r
+            pure $ VersionedDepSpec vp ud s
         , do
             p <- parser
             ud <- optional parser
             s <- optional $ $( char ':' ) *> parser
-            r <- optional $ $( string "::" ) *> parser
-            pure $ UnversionedDepSpec p ud s r
+            pure $ UnversionedDepSpec p ud s
         ]
 
 instance Printable DepSpec where
-    toString (VersionedDepSpec vp ud ms mr)
+    toString (VersionedDepSpec vp ud ms)
         =  toString vp
         ++ foldMap toString ud
         ++ foldMap (\s -> ":" ++ toString s) ms
-        ++ foldMap (\r -> "::" ++ toString r) mr
-    toString (UnversionedDepSpec p ud ms mr)
+    toString (UnversionedDepSpec p ud ms)
         =  toString p
         ++ foldMap toString ud
         ++ foldMap (\s -> ":" ++ toString s) ms
-        ++ foldMap (\r -> "::" ++ toString r) mr
 
 data Slot
     = AnySlot
@@ -137,20 +132,3 @@ slotParser = wordAllowed wordStart wordRest
         , (== '.')
         , (== '-')
         ]
-
-newtype Repository = Repository { unwrapRepository :: String }
-    deriving stock (Show, Eq, Ord, Data, Generic)
-    deriving newtype (IsString, Printable)
-
-instance Parsable Repository st String where
-    parserName = "portage repository"
-    parser = Repository <$> pkgParser wordStart wordRest
-      where
-        wordStart =
-            [ isAsciiUpper
-            , isAsciiLower
-            , isDigit
-            , (== '_')
-            ]
-
-        wordRest = (== '-') : wordStart

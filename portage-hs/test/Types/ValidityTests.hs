@@ -65,10 +65,8 @@ instance Arbitrary DepSpec where
             <$> arbitrary
             <*> liftArbitrary arbitrary
             <*> liftArbitrary arbitrary
-            <*> liftArbitrary arbitrary
         , UnversionedDepSpec
             <$> arbitrary
-            <*> liftArbitrary arbitrary
             <*> liftArbitrary arbitrary
             <*> liftArbitrary arbitrary
         ]
