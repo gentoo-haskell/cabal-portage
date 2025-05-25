@@ -37,13 +37,13 @@ import Distribution.Portage.Types.VersionedPkg
 data DepSpec =
     VersionedDepSpec
     { depSpecVersionedPkg :: VersionedPkg
-    , depSpecUseDependency :: Maybe UseDependency
     , depSpecSlot :: Maybe Slot
+    , depSpecUseDependency :: Maybe UseDependency
     }
     | UnversionedDepSpec
     { depSpecPackage :: Package
-    , depSpecUseDependency :: Maybe UseDependency
     , depSpecSlot :: Maybe Slot
+    , depSpecUseDependency :: Maybe UseDependency
     }
     deriving stock (Show, Eq, Ord, Data, Generic)
 
@@ -52,25 +52,25 @@ instance Parsable DepSpec st String where
     parser = choice
         [ try $ do
             vp <- parser
-            ud <- optional parser
             s <- optional $ $( char ':' ) *> parser
-            pure $ VersionedDepSpec vp ud s
+            ud <- optional parser
+            pure $ VersionedDepSpec vp s ud
         , do
             p <- parser
-            ud <- optional parser
             s <- optional $ $( char ':' ) *> parser
-            pure $ UnversionedDepSpec p ud s
+            ud <- optional parser
+            pure $ UnversionedDepSpec p s ud
         ]
 
 instance Printable DepSpec where
-    toString (VersionedDepSpec vp ud ms)
+    toString (VersionedDepSpec vp ms ud)
         =  toString vp
-        ++ foldMap toString ud
         ++ foldMap (\s -> ":" ++ toString s) ms
-    toString (UnversionedDepSpec p ud ms)
+        ++ foldMap toString ud
+    toString (UnversionedDepSpec p ms ud)
         =  toString p
-        ++ foldMap toString ud
         ++ foldMap (\s -> ":" ++ toString s) ms
+        ++ foldMap toString ud
 
 data Slot
     = AnySlot

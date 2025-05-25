@@ -58,8 +58,8 @@ unitTests = testGroup "unit tests"
                     (Category "dev-python")
                     (PkgName "nose")
                 )
-                Nothing
                 (Just (Slot "1337" Nothing))
+                Nothing
         , "dev-python/nose" `parserTest`
             UnversionedDepSpec
                 (Package
@@ -82,8 +82,8 @@ unitTests = testGroup "unit tests"
                         (Just (VersionRevision ('1':|"23")))
                     )
                 )
-                Nothing
                 (Just (Slot "1337" Nothing))
+                Nothing
         , "=dev-python/nose-1.23*" `parserTest`
             VPkgEqWildcard
                 (Package
@@ -110,8 +110,8 @@ unitTests = testGroup "unit tests"
                         Nothing
                     )
                 )
-                Nothing
                 (Just AnySlot)
+                Nothing
         , "[profile?,-test]" `parserTest`
             UseDependency
                 (UseDepMatchIfEnabled "profile" Nothing
@@ -202,9 +202,9 @@ unitTests = testGroup "unit tests"
                         Nothing
                     )
                 )
-                Nothing
                 (Just (Slot "gawk--" Nothing))
-        , "=app-office/hledger-web-1.26.1[profile(+)?,-test]:0/1.26.1=" `parserTest`
+                Nothing
+        , "=app-office/hledger-web-1.26.1:0/1.26.1=[profile(+)?,-test]" `parserTest`
             VersionedDepSpec
                 (VPkgEq
                     (Package
@@ -218,12 +218,12 @@ unitTests = testGroup "unit tests"
                         Nothing
                     )
                 )
+                (Just (SlotBreakable "0" (Just (SubSlot "1.26.1"))))
                 (Just (UseDependency
                     (UseDepMatchIfEnabled "profile" (Just UseDefaultEnabled)
                         :| [UseDepDisabled "test" Nothing]
                     )
                 ))
-                (Just (SlotBreakable "0" (Just (SubSlot "1.26.1"))))
         ]
     , testGroup "failed QuickCheck tests"
         [ "7-r2b" `parserTest` PkgName "7-r2b"
@@ -243,12 +243,12 @@ unitTests = testGroup "unit tests"
                     (Category "F")
                     (PkgName "z-tNk")
                 )
+                Nothing
                 (Just (UseDependency
                     (UseDepMatchIfEnabled (UseFlag "s") (Just UseDefaultEnabled)
                     :| []
                     )
                 ))
-                Nothing
         ]
     ]
 
