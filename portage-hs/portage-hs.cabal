@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               portage-hs
-version:            0.2.0.0
+version:            0.1.0.0
 synopsis:           Data structures and functions for interacting with the Portage package manager
 
 tested-with:        GHC == { 9.4.8, 9.6.7, 9.8.4, 9.10.1, 9.12.2 }
@@ -115,7 +115,7 @@ test-suite portage-hs-test
     build-depends:
         , parsable >=0.1 && <0.2
         , parsable-test >=0.1 && <0.2
-        , portage-hs >=0.2 && <0.3
+        , portage-hs >=0.1 && <0.2
         , base >=4.17 && <4.22
         , bytestring >=0.11 && <0.13
         , conduit <1.4
