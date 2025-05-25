@@ -241,6 +241,28 @@ instance Arbitrary Version where
         <*> liftArbitrary (liftArbitrary arbitrary)
         <*> liftArbitrary arbitrary
 
+
+-- 8.3.1 Operators
+--
+-- The following operators are available:
+--
+-- <
+--     Strictly less than the specified version.
+--
+-- <=
+--     Less than or equal to the specified version.
+--
+-- =
+--     Exactly equal to the specified version. Special exception: if the version specified has an asterisk immediately following it, then only the given number of version components is used for comparison, i. e. the asterisk acts as a wildcard for any further components. When an asterisk is used, the specification must remain valid if the asterisk were removed. (An asterisk used with any other operator is illegal.)
+--
+-- ~
+--     Equal to the specified version when revision parts are ignored.
+--
+-- >=
+--     Greater than or equal to the specified version.
+--
+-- >
+--     Strictly greater than the specified version.
 instance Arbitrary VersionedPkg where
     arbitrary = oneof
         [ VPkgLT <$> arbitrary <*> arbitrary
