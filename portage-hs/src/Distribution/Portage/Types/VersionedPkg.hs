@@ -1,8 +1,7 @@
 {-|
 Module      : Distribution.Portage.Types.VersionedPkg
 
-Types for packages with specific version constraints as defined in the Gentoo
-Package Manager Specification.
+Types for Portage packages with specific version constraints
 -}
 
 {-# Language DeriveDataTypeable #-}
@@ -36,17 +35,17 @@ import Distribution.Portage.Types.Version
 -- | One constructor per operator as defined in section 8.3.1 in the PMS
 data VersionedPkg
     = -- | @<@
-      VPkgLT Package Version
+      VPkgLT { vPkgPackage :: Package, vPkgVersion :: Version }
       -- | @<=@
-    | VPkgLE Package Version
+    | VPkgLE { vPkgPackage :: Package, vPkgVersion :: Version }
       -- | @>@
-    | VPkgGT Package Version
+    | VPkgGT { vPkgPackage :: Package, vPkgVersion :: Version }
       -- | @>=@
-    | VPkgGE Package Version
+    | VPkgGE { vPkgPackage :: Package, vPkgVersion :: Version }
       -- | @=@
-    | VPkgEq Package Version
+    | VPkgEq { vPkgPackage :: Package, vPkgVersion :: Version }
       -- | @~@
-    | VPkgEqIgnoreRev Package Version
+    | VPkgEqIgnoreRev { vPkgPackage :: Package, vPkgVersion :: Version }
     -- | "Special exception: if the version specified has an asterisk
     --   immediately following it..." Acts as a version wildcard.
     --
@@ -103,8 +102,6 @@ defVersionedPkgParse = do
     v <- parser
     pure (p,v)
 
--- | Does a specific 'Package' + 'Version' fall in the range specified by a
---   'VersionedPkg'? e.g. would a Gentoo package manager consider it a match?
 matchVersionedPackage :: VersionedPkg -> Package -> Version -> Bool
 matchVersionedPackage vp pkg ver =
     case vp of
